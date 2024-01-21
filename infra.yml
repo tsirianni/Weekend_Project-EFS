@@ -1,0 +1,123 @@
+# All resources have the Tag Weekend_Project to facilitate cost analysis later on
+AWSTemplateFormatVersion: 2010-09-09
+Description: Weekend Project Series - EC2 instances connected to EFS file system
+
+Parameters:
+  LatestLinuxImageId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/al2023-ami-minimal-kernel-default-x86_64'
+  SubnetIdOne:
+    Type: AWS::EC2::Subnet::Id
+    Default: '{{us-wast-1a-subnet-id-here}}' # us-east-1a
+  SubnetIdTwo:
+    Type: AWS::EC2::Subnet::Id
+    Default: '{{us-wast-1b-subnet-id-here}}' # us-east-1b
+
+Resources:
+  # Security Groups
+  SecurityGroupSSH:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: EC2 SSH Access
+      GroupDescription: Allows access to the EC2 instances through SSH
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Weekend_Project
+          Value: EFS
+
+  SecurityGroupEFSMountTarget:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG EFS Mount Target
+      GroupDescription: Allows EC2 instances to access the EFS file system through the mount target
+      Tags:
+        - Key: Weekend_Project
+          Value: EFS
+
+  SecurityGroupEFSMountTargetIngressRule:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      Description: Inbound rule that allows traffic between the instances and the mount target
+      IpProtocol: tcp
+      FromPort: 2049 # will infer the NFS type from the port
+      ToPort: 2049
+      SourceSecurityGroupId: !GetAtt SecurityGroupSSH.GroupId
+      GroupId: !GetAtt SecurityGroupEFSMountTarget.GroupId
+
+  # File System and Mount Target
+  FileSystem:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      PerformanceMode: generalPurpose
+      ThroughputMode: bursting
+      FileSystemTags:
+        - Key: Weekend_Project
+          Value: EFS
+
+  FileSystemMountTargetOne:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !GetAtt FileSystem.FileSystemId
+      SubnetId: !Ref SubnetIdOne
+      SecurityGroups:
+        - !GetAtt SecurityGroupEFSMountTarget.GroupId
+
+  FileSystemMountTargetTwo:
+    Type: 'AWS::EFS::MountTarget'
+    Properties:
+      FileSystemId: !GetAtt FileSystem.FileSystemId
+      SubnetId: !Ref SubnetIdTwo
+      SecurityGroups:
+        - !GetAtt SecurityGroupEFSMountTarget.GroupId
+
+  # EC2 Instances and KeyPair
+  EC2KeyPair:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyFormat: pem
+      KeyName: EC2KeyPairForSSH
+      KeyType: rsa
+      Tags:
+        - Key: Weekend_Project
+          Value: EFS
+
+  WebServerOne:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestLinuxImageId # Amazon Linux 2023 AMI
+      InstanceType: t3.nano
+      KeyName: !Ref EC2KeyPair
+      SubnetId: !Ref SubnetIdOne
+      SecurityGroupIds:
+        - !GetAtt SecurityGroupSSH.GroupId
+      Tags:
+        - Key: Weekend_Project
+          Value: EFS
+
+  WebServerTwo:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestLinuxImageId # Amazon Linux 2023 AMI
+      InstanceType: t3.nano
+      KeyName: !Ref EC2KeyPair
+      SubnetId: !Ref SubnetIdTwo
+      SecurityGroupIds:
+        - !GetAtt SecurityGroupSSH.GroupId
+      Tags:
+        - Key: Weekend_Project
+          Value: EFS
+
+Outputs:
+  FileSystemId:
+    Description: The EFS file system's ID
+    Value: !GetAtt FileSystem.FileSystemId
+  WebServerOnePublicDNSName:
+    Description: The Web Server's public DNS name
+    Value: !GetAtt WebServerOne.PublicDnsName
+  WebServerTwoPublicDNSName:
+    Description: The Web Server's public DNS name
+    Value: !GetAtt WebServerTwo.PublicDnsName
