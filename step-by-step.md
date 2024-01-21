@@ -21,9 +21,10 @@ Agora, ao visitar a página do serviço CloudFormation, deve encontrar um stack 
 
 ## Obtendo a chave de acesso
 
-Para acessar as máquinas virtuais, precisaremos da chave .pem criada. Quando uma key-pair é criada via CloudFormation, ela fica armazenada no serviço **AWS Systems Manager Parameter Store** sob a seguinte rota `/ec2/keypair/{key_pair_id}`[^1]
+Para acessar as máquinas virtuais, precisaremos da chave .pem criada. Quando uma key-pair é criada via CloudFormation, ela fica armazenada no serviço **AWS Systems Manager Parameter Store** sob a seguinte rota `/ec2/keypair/{key_pair_id}`.
 
-[^1] Fonte: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-keypair.html#aws-resource-ec2-keypair-syntax
+> [!NOTE]
+> Para maiores detalhes sobre a criação de key-pairs com cloudFormation, [clique aqui](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-keypair.html#aws-resource-ec2-keypair-syntax).
 
 Logo, primeiro executaremos um comando para obter a ID da key-pair atrelada às máquinas virtuais e depois executaremos outro comando para realizar o download do arquivo .pem desta chave.
 
@@ -47,15 +48,19 @@ Na página de detalhes do Stack (dentro do serviço CloudFormation), há uma se�
 
 `ssh -i /myKeyPair.pem ec2-user@endereço-dns-público-aqui`
 
-Responda `yes` (após realizar o step mencionado na nota de rodapé) quando o terminal lhe perguntar se deseja continuar com a conexão. [^2]
+Responda `yes` (após realizar o step mencionado abaixo) quando o terminal lhe perguntar se deseja continuar com a conexão.
 
-[^2] - Verifique a fingerprint antes de continuar com a conexão para evitar ataques to tipo _man-in-the-middle_. Maiores detalhes de como fazer essa verificação podem ser encontrados aqui: https://docs.aws.amazon.com/pt_br/AWSEC2/latest/UserGuide/connect-linux-inst-ssh.html
+> [!CAUTION]
+> Verifique a fingerprint antes de continuar com a conexão para evitar ataques to tipo _man-in-the-middle_. Maiores detalhes de como fazer essa verificação podem ser encontrados [aqui](https://docs.aws.amazon.com/pt_br/AWSEC2/latest/UserGuide/connect-linux-inst-ssh.html).
 
 Agora deve estar conectado à máquina virtual.
 
 # Instalando a lib de configuração
 
 Para configurar a máquina virtual para utilizar o EFS, utilizaremos a lib `amazon-efs-utils`.
+
+> [!TIP]
+> Se não quiser utilizar `sudo` em todos os comandos, pode aumentar suas permissões executando `sudo su` e executar os próximos comandos como root.
 
 instale-a através do seguinte comando:
 
