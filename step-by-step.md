@@ -83,3 +83,12 @@ Meus parabéns, acaba de configurar a primeira máquina virtual para utilizar o 
 Repita o processo de adquirir o endereço público, conectar-se à máquina virtual, instalar a lib da AWS, criar o repositório (com o mesmo nome - shared_data) e executar o comando de mount com a id do file system. Agora, ao acessar o diretório com **cd** e listar os arquivos, já deve observar que possui acesso ao arquivo **test.txt**.
 
 Meus parabéns, ambas as máquinas virtuais possuem acesso à pasta shared_data/ e podem criar/alterar arquivos armazenados no sistema de arquivos. Isso conclui a prática!
+
+# Clean up
+
+Para deletar todos os recursos criados e evitar cobranças indesejadas em sua conta basta deletar o stack, o cloudFormation irá deletar todos os recursos criados por ele.
+
+> [!CAUTION]
+> Não delete nenhum recurso criado pelo cloudFormation manualmente, pois isso pode causar problemas quando solicitar a exclusão automática dos recursos. Sempre gerencie os recursos criados pelo cloudFormation através dele, seja para criar, atualizar ou deletar recursos.
+
+Para deletar os recursos, execute: `aws cloudFormation delete-stack --stack-name EFS-STACK`
